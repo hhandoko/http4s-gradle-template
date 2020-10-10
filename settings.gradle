@@ -1,0 +1,21 @@
+pluginManagement {
+    plugins {
+        // Print nice test-run output
+        // See: https://github.com/radarsh/gradle-test-logger-plugin
+        id 'com.adarshr.test-logger' version testLoggerVersion
+
+        // Multi-language syntax linter and formatter
+        // See: https://github.com/diffplug/spotless
+        id 'com.diffplug.spotless' version spotlessVersion
+
+        // Discover dependency updates
+        // See: https://github.com/ben-manes/gradle-versions-plugin
+        id 'com.github.ben-manes.versions' version versionUpdatesVersion
+
+        // Create all-in-one JAR for distribution
+        // See: https://github.com/johnrengelman/shadow
+        id "com.github.johnrengelman.shadow" version shadowVersion
+    }
+}
+
+rootProject.name = 'http4s'

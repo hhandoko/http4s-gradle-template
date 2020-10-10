@@ -1,0 +1,13 @@
+ext {
+    /**
+     * Wraps over Scala libraries to append correct Scala version (e.g. with _2.13 suffix)
+     *
+     * @param dependency Dependency declaration.
+     * @returns Dependency declaration for the correct Scala version.
+     */
+    scala = { String dependency ->
+        def (groupId, artifactId, version) = dependency.tokenize(':')
+
+        "${groupId}:${artifactId}_${scalaLibVersion}:${version}"
+    }
+}

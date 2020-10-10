@@ -1,0 +1,92 @@
+plugins {
+    id 'application'
+    id 'com.adarshr.test-logger'
+    id "com.diffplug.spotless"
+    id 'com.github.ben-manes.versions'
+
+    id 'java'
+    id 'scala'
+}
+
+configurations.all {
+    // Ensure that version conflict in dependencies throws error at compile-time rather that fail at runtime
+    resolutionStrategy {
+        failOnVersionConflict()
+        preferProjectModules()
+    }
+}
+
+// Import Java and Scala compiler plugins and options, and build tool utilities into scope
+apply from: "${project.rootDir}/gradle/ext/javacOptions.gradle"
+apply from: "${project.rootDir}/gradle/ext/scalacOptions.gradle"
+apply from: "${project.rootDir}/utils.gradle"
+
+// Read version number from a text file in project root, easier to update within build pipeline
+version = rootProject.file('VERSION.txt').text.trim()
+group = 'com.hhandoko'
+
+application {
+    mainClass = 'Application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "org.scala-lang:scala-library:${scalaVersion}"
+    implementation scala("io.circe:circe-generic:${circeVersion}")
+    implementation scala("org.http4s:http4s-blaze-client:${http4sVersion}")
+    implementation scala("org.http4s:http4s-blaze-server:${http4sVersion}")
+    implementation scala("org.http4s:http4s-circe:${http4sVersion}")
+    implementation scala("org.http4s:http4s-dsl:${http4sVersion}")
+
+    runtimeOnly "org.fusesource.jansi:jansi:${jansiVersion}"
+
+    testImplementation scala("org.scalactic:scalactic:${scalatestVersion}")
+    testImplementation scala("org.scalatest:scalatest:${scalatestVersion}")
+    testImplementation scala("org.scalatest:scalatest-freespec:${scalatestVersion}")
+
+    testRuntime "org.junit.platform:junit-platform-engine:$junitPlatformVersion"
+    testRuntime "org.junit.platform:junit-platform-launcher:$junitPlatformVersion"
+    testRuntime "co.helmethair:scalatest-junit-runner:${scalatestJunitRunnerVersion}"
+}
+
+// Code formatter Gradle plugin
+// See: https://github.com/diffplug/spotless
+//      https://github.com/diffplug/spotless/tree/master/plugin-gradle
+spotless {
+    // Use Google Java's styleguide
+    // See: https://google.github.io/styleguide/javaguide.html
+    java {
+        googleJavaFormat()
+        importOrder 'java', 'javax', 'scala', '', '\\#', group, "\\#${group}"
+    }
+
+    // Use customer scalafmt rule as defined in `.scalafmt.conf`
+    // scalafmt does not support import orders (yet), so import configuration needs to be setup by each developer
+    // following the rules above (as per Java rules).
+    // See: https://scalameta.org/scalafmt/
+    scala {
+        scalafmt(scalaFmtVersion).configFile('.scalafmt.conf')
+    }
+}
+
+test {
+    // Run ScalaTest on latest JUnit in Gradle
+    // See: https://github.com/helmethair-co/scalatest-junit-runner
+    useJUnitPlatform {
+        includeEngines 'scalatest'
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
+}
+
+// Pretty-print test output Gradle plugin, supports parallel test execution
+// See: https://github.com/radarsh/gradle-test-logger-plugin
+testlogger {
+    theme 'mocha'
+    slowThreshold 2000 // ms
+}
